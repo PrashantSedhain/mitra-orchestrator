@@ -1,0 +1,50 @@
+name: mitra-orchestrator
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mitra}
+      POSTGRES_USER: ${POSTGRES_USER:-mitra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [control-plane]
+
+  api:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      MITRA_ENVIRONMENT: ${MITRA_ENVIRONMENT:-development}
+      MITRA_API_HOST: 0.0.0.0
+      MITRA_API_PORT: 8000
+      MITRA_LOG_LEVEL: ${MITRA_LOG_LEVEL:-INFO}
+      MITRA_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-mitra}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mitra}
+    ports:
+      - "${MITRA_API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    networks: [control-plane]
+
+networks:
+  control-plane:
+    internal: false
+
+volumes:
+  postgres-data:

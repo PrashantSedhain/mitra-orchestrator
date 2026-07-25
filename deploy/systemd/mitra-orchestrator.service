@@ -1,0 +1,18 @@
+[Unit]
+Description=Mitra Orchestrator Docker Compose stack
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/mitra-orchestrator
+EnvironmentFile=/opt/mitra-orchestrator/.env
+ExecStart=/usr/bin/docker compose -f deploy/compose/compose.yaml up -d --remove-orphans
+ExecReload=/usr/bin/docker compose -f deploy/compose/compose.yaml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f deploy/compose/compose.yaml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

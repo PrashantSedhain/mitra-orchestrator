@@ -1,0 +1,21 @@
+version: 1
+default: deny
+capabilities:
+  repository.read:
+    decision: allow
+  artifact.write:
+    decision: allow
+    constraints:
+      max_bytes: 104857600
+  repository.write:
+    decision: require_approval
+  network.egress:
+    decision: require_approval
+  credential.use:
+    decision: require_approval
+  git.push:
+    decision: require_approval
+  pull_request.create:
+    decision: require_approval
+  deployment.execute:
+    decision: deny
