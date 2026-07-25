@@ -17,7 +17,7 @@ typecheck:
 test:
 	pytest --cov=mitra_orchestrator --cov-report=term-missing
 
-check: lint typecheck test
+check: lint typecheck test compose-config
 
 compose-config:
-	docker compose --env-file .env -f deploy/compose/compose.yaml config --quiet
+	./scripts/validate-compose.sh

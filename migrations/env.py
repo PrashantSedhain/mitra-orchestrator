@@ -7,9 +7,13 @@ from alembic import context
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from mitra_orchestrator.config.settings import Settings
+
 config = context.config
-if database_url := os.getenv("MITRA_DATABASE_URL"):
-    config.set_main_option("sqlalchemy.url", database_url)
+database_url = os.getenv("MITRA_DATABASE_URL") or Settings().database_url.render_as_string(
+    hide_password=False
+)
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

@@ -80,7 +80,7 @@ The layer retrieves private project knowledge from a store outside customer repo
 
 ### Policy and approval engine
 
-Policy evaluates actor, job, repository, requested capability, risk, environment, and current approvals. Decisions are allow, deny, or require-approval, with reason and policy version recorded. Approvals bind to a precise action digest, scope, expiry, and approver; changing the action invalidates approval.
+Policy evaluates actor, job, repository, requested capability, risk, environment, and current approvals. Decisions are allow, deny, or require-approval, with reason and policy version recorded. Trusted controller-owned inspection, repository-code execution, shell execution, dependency installation, network, credentials, worktree writes, and provider mutations are separate non-implying capabilities. Approvals bind to a precise action digest, scope, expiry, and approver; changing the action invalidates approval.
 
 ### MCP adapter
 

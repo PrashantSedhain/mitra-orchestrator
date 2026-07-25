@@ -70,7 +70,7 @@ The Compose deployment is for initial single-host operation, not a claim of high
 make check
 ```
 
-This runs formatting checks, linting, type checking, and tests. See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions.
+This runs formatting checks, linting, type checking, tests, and Docker Compose configuration validation. See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions.
 
 ## Repository map
 

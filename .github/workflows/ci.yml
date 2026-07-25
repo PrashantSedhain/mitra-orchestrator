@@ -25,3 +25,5 @@ jobs:
       - run: ruff check .
       - run: mypy src tests
       - run: pytest --cov=mitra_orchestrator --cov-report=term-missing
+      - if: matrix.python-version == '3.11'
+        run: ./scripts/validate-compose.sh

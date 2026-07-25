@@ -40,13 +40,44 @@ Prompt injection is not solved by a system prompt alone. Enforcement must remain
 
 ## Authorization and approvals
 
-- Default capability set is read-only: clone/fetch approved repositories, read worktree, run safe local analysis without secrets, and upload bounded artifacts.
-- Write worktree, run code, network egress, install dependencies, access secrets, push branches, create/update PRs, query external databases, and deploy are distinct capabilities.
+- Default capability set is read-only: clone/fetch approved repositories, read the worktree, invoke allow-listed non-shell inspection tools implemented outside the repository, and upload bounded artifacts.
+- `tool.execute.trusted` cannot run worktree executables, shell commands, package-manager hooks, build scripts, or tests. `repository_code.execute` is the separate capability for executing any repository-controlled code.
+- Write worktree, execute repository code, use a shell, network egress, install dependencies, access secrets, push branches, create/update PRs, query external databases, and deploy are distinct capabilities. No capability implies another.
 - Policy is deny-by-default and versioned.
 - Approval records include action digest, repository/environment, capability, constraints, approver, decision, expiry, and policy version.
 - Approvers cannot approve outside their project role; self-approval is disabled for high-risk actions.
 - Approval is invalid after material plan/action changes.
 - Emergency operator actions are explicit, short-lived, and audited.
+
+### Initial capability vocabulary
+
+| Capability | Default | Meaning |
+|---|---|---|
+| `repository.read` | Allow | Clone/fetch an assigned repository and read the pinned worktree |
+| `tool.execute.trusted` | Allow with allow-list | Invoke controller-owned inspection operations without a shell, secrets, network, or repository executables |
+| `artifact.write` | Allow with limits | Upload bounded output through the artifact contract; does not grant arbitrary host/worktree writes |
+| `repository.write` | Approval | Modify the ephemeral worktree |
+| `repository_code.execute` | Approval | Run a worktree executable, build script, test, compiler plugin, or other repository-controlled code |
+| `shell.execute` | Approval | Invoke an interactive or general-purpose shell, independently of repository-code permission |
+| `dependency.install` | Approval | Run package-manager resolution/install hooks; does not imply unrestricted egress |
+| `network.egress` | Approval | Reach only policy-approved destinations and methods |
+| `credential.use` | Approval | Receive one scoped credential handle for one target/action |
+| `git.push` / `pull_request.create` | Approval | Perform the named provider mutation; neither grants merge |
+| `deployment.execute` | Deny initially | Change a runtime environment |
+
+Policy can require approval even where the table says allow. A plan records every requested capability, and an approval binds to the exact action digest and constraints.
+
+Capabilities are cumulative requirements, not interchangeable roles. The controller computes the complete requirement set for an operation before dispatch:
+
+| Operation | Required capabilities |
+|---|---|
+| Controller-owned metadata inspection | `repository.read`, `tool.execute.trusted` |
+| Direct test runner/build tool loading repository code | `repository.read`, `repository_code.execute` |
+| Repository script through a shell | `repository.read`, `repository_code.execute`, `shell.execute` |
+| Dependency installation with lifecycle hooks | `dependency.install`, `repository_code.execute`, plus `network.egress` when fetching |
+| Modify and push a branch | `repository.write`, `git.push`, plus the relevant credential grant |
+
+Worker bootstrap, heartbeat, and the signed runtime protocol are control-plane mechanics rather than job-directed tool capabilities. They are fixed by the allow-listed image and cannot be repurposed by a plan or prompt.
 
 ## Credential model
 

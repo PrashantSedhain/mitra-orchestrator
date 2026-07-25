@@ -30,7 +30,7 @@ REQUESTED -> PROVISIONING -> STARTING -> READY -> BUSY -> FINALIZING -> EXITED
 - monotonically increasing fencing token and lease expiry
 - registry-resolved clone endpoint and pinned base commit
 - plan revision and digest
-- explicit capability set and constraints
+- explicit capability set and constraints, including separate trusted-tool, repository-code, shell, dependency, network, write, and credential grants
 - image digest, CPU/memory/PID/disk/time limits
 - credential handles with expiry (never long-lived plaintext in the spec)
 - controller callback and artifact upload endpoints
@@ -46,7 +46,9 @@ The database lease has owner, fencing token, expiry, and last heartbeat. Heartbe
 
 ## Workspace and Git contract
 
-The worker starts from a clean ephemeral volume. It verifies the pinned commit, checks out a controller-allocated branch/worktree, and records resulting commit IDs. The controller controls whether write, commit, push, or PR capabilities are granted. Artifact collection follows allow-listed paths and rejects symlink/path escapes.
+The worker starts from a clean ephemeral volume. It verifies the pinned commit, checks out a controller-allocated branch/worktree, and records resulting commit IDs. The controller controls whether worktree write, repository-code execution, shell, dependency installation, commit, push, or PR capabilities are granted. `tool.execute.trusted` is limited to controller-owned, non-shell inspection operations and cannot launch a worktree executable. Artifact collection follows allow-listed paths and rejects symlink/path escapes.
+
+Capabilities are checked cumulatively for each operation. For example, a repository script launched through a shell needs both `repository_code.execute` and `shell.execute`; a package install that downloads dependencies and runs hooks needs `dependency.install`, `network.egress`, and `repository_code.execute`. Worker bootstrap and protocol heartbeats are fixed runtime mechanics, not plan-grantable execution.
 
 ## Isolation and resources
 
@@ -66,4 +68,4 @@ Startup failure, health timeout, resource exhaustion, worker crash, callback fai
 
 ## Image contract
 
-Every worker image provides a fixed non-root user, an entrypoint implementing the runtime protocol, Codex at an approved version, CA certificates, Git, and a minimal toolchain. Language images extend `base`. Images publish an SBOM, vulnerability scan result, and immutable digest. Repository dependency installation is a separately controlled capability.
+Every worker image provides a fixed non-root user, an entrypoint implementing the runtime protocol, Codex at an approved version, CA certificates, Git, and a minimal toolchain. Language images extend `base`. Images publish an SBOM, vulnerability scan result, and immutable digest. Repository-code execution, shell execution, and dependency installation are separately controlled capabilities; granting one does not grant the others.

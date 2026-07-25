@@ -47,7 +47,7 @@ Exit: no write/network/secret capability can occur without a recorded policy dec
 - Hardened base/language images and controlled network egress.
 - Crash/restart/duplicate callback/host reboot integration tests.
 
-Exit: a read-only sample job survives controller restart and leaves no stale privileged resources.
+Exit: a sample job limited to `repository.read`, constrained `tool.execute.trusted`, and bounded `artifact.write` survives controller restart and leaves no stale privileged resources. It does not execute repository-controlled code.
 
 ## Phase 5 — GitHub engineering loop
 

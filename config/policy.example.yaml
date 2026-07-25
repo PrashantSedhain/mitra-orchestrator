@@ -3,11 +3,24 @@ default: deny
 capabilities:
   repository.read:
     decision: allow
+  tool.execute.trusted:
+    decision: allow
+    constraints:
+      shell: false
+      repository_executables: false
+      network: false
+      credentials: false
   artifact.write:
     decision: allow
     constraints:
       max_bytes: 104857600
   repository.write:
+    decision: require_approval
+  repository_code.execute:
+    decision: require_approval
+  shell.execute:
+    decision: require_approval
+  dependency.install:
     decision: require_approval
   network.egress:
     decision: require_approval
@@ -19,3 +32,13 @@ capabilities:
     decision: require_approval
   deployment.execute:
     decision: deny
+
+# The future policy evaluator will require every capability applicable to an
+# operation. These examples document composition; they do not grant anything.
+compound_operations:
+  repository_test_or_build:
+    requires: [repository.read, repository_code.execute]
+  repository_script_via_shell:
+    requires: [repository.read, repository_code.execute, shell.execute]
+  network_dependency_install_with_hooks:
+    requires: [dependency.install, repository_code.execute, network.egress]
